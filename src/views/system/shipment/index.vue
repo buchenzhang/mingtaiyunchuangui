@@ -349,7 +349,7 @@ export default {
       this.title = "添加订单";
     },
     getContractPdf(row) {
-      if (this.shipmentList[0].supplyCompany !== '铭泰云创'){
+      if (this.shipmentList[0].supplyCompany !== '铭泰创新'){
         this.$message.error('外部系统订单，无合同数据');
         return
       }

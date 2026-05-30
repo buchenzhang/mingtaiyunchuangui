@@ -375,7 +375,9 @@ export default {
       try {
         // 1. 从后端获取 ZIP 压缩包
         this.download('system/audit/downloadZip/' + id+'.zip', {
-        }, `${row.contractCode}.zip`);
+        }, `${row.contractCode}.zip`, {
+          timeout: 60000 // 设置超时时间为 60 秒，可根据需要调整
+        });
       } catch (error) {
         console.error('获取 ZIP 失败:', error);
         this.$message.error('找不到该文件，请稍后重试');

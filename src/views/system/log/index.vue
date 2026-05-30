@@ -329,7 +329,7 @@ export default {
   <div>
     <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2px;">  <!-- 缩小Logo和公司名的底部间距 -->
       <img src="/company-logo.png" style="width: 80px; height: 20px; margin-right: 10px;">
-      <h1 style="margin: 0; font-size: 24px; line-height: 1.2;">深圳市铭泰云创科技有限公司</h1>  <!-- 固定行高 -->
+      <h1 style="margin: 0; font-size: 24px; line-height: 1.2;">深圳市铭泰创新技术有限公司</h1>  <!-- 固定行高 -->
     </div>
     <h4 style="margin: 2px 0; font-size: 12px; line-height: 1.2;">公司地址:深圳市宝安区航城街道钟屋泰兴隆工业城D栋6楼公司电话:0755-23082174</h4>  <!-- 缩小边距和字号 -->
     <h2 style="margin: 5px 0; font-size: 18px; line-height: 1.2;">送货单</h2>  <!-- 调整标题间距 -->

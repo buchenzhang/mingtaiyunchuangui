@@ -1,5 +1,6 @@
 <template>
   <div>
+<!--    这个页面是在用的合同页面-->
     <el-card>
       <el-form>
         <el-form-item label="选择合同客户" prop="field101">
@@ -35,7 +36,7 @@
       <el-card class="form-card">
         <!-- 公司信息和合同标题 -->
         <div class="company-info">
-          <h1 style="font-size: 32px;">深圳市铭泰云创科技有限公司</h1>
+          <h1 style="font-size: 32px;">深圳市铭泰创新技术有限公司</h1>
           <h2 style="font-size: 30px;">销 售 合 同</h2>
         </div>
 
@@ -83,7 +84,7 @@
               <!--            <el-input v-model="formData.supplyCompany" disabled value="深圳市铭泰云创科技有限公司"></el-input>-->
             </el-form-item>
             <el-form-item label="供方单位名称：">
-              <el-input v-model="formData.supplyCompany" disabled value="深圳市铭泰云创科技有限公司"></el-input>
+              <el-input v-model="formData.supplyCompany" disabled value="深圳市铭泰创新技术有限公司"></el-input>
             </el-form-item>
             <el-form-item label="供方地址：">
               <el-input v-model="formData.supplyAddress" disabled value="深圳市宝安区航城街道钟屋泰兴隆工业城D栋6楼"></el-input>
@@ -95,13 +96,13 @@
               <el-input v-model="formData.supplyPhone"></el-input>
             </el-form-item>
             <el-form-item label="供方开户行：">
-              <el-input v-model="formData.supplyBank" disabled value="招商银行股份有限公司深圳南海支行"></el-input>
+              <el-input v-model="formData.supplyBank" disabled value="中国农业银行股份有限公司深圳弘雅支行"></el-input>
             </el-form-item>
             <el-form-item label="供方帐号：">
-              <el-input v-model="formData.supplyAccount" disabled value="755976430810001"></el-input>
+              <el-input v-model="formData.supplyAccount" disabled value="41019500040045856"></el-input>
             </el-form-item>
             <el-form-item label="供方税号：">
-              <el-input v-model="formData.supplyTax" disabled value="91440300MAE2QKQ221"></el-input>
+              <el-input v-model="formData.supplyTax" disabled value="91440300MACQDGUD45"></el-input>
             </el-form-item>
           </div>
         </el-form>
@@ -556,13 +557,13 @@ export default {
         demandBank: '',
         demandAccount: '',
         demandTax: '',
-        supplyCompany: '深圳市铭泰云创科技有限公司',
+        supplyCompany: '深圳市铭泰创新技术有限公司',
         supplyAddress: '深圳市宝安区航城街道钟屋泰兴隆工业城D栋6楼',
         supplyRepresentative: '',
         supplyPhone: '',
-        supplyBank: '招商银行股份有限公司深圳南海支行',
-        supplyAccount: '755976430810001',
-        supplyTax: '91440300MAE2QKQ221',
+        supplyBank: '中国农业银行股份有限公司深圳弘雅支行',
+        supplyAccount: '41019500040045856',
+        supplyTax: '91440300MACQDGUD45',
         totalAmountCH:'',
         totalAmount:'',
         remark:'',
@@ -661,16 +662,16 @@ export default {
       if (this.saveButtonDisabled) {
         return;
       }
-      
+
       try {
         // 禁用按钮
         this.saveButtonDisabled = true;
-        
+
         // 设置 5 秒后恢复按钮
         setTimeout(() => {
           this.saveButtonDisabled = false;
         }, 5000);
-        
+
         // 1. 先保存数据到本地存储
         localStorage.setItem('supplyDemandFormData', JSON.stringify(this.formData));
         localStorage.setItem('supplyDemandTableData', JSON.stringify(this.tableData));
@@ -1216,7 +1217,7 @@ export default {
     },
     calculateRow(row) {
       // 计算合同号
-      this.formData.contractNumber = 'MTYC' + new Date().toISOString().split('T')[0].replace(/-/g, '') + this.formData.userId + this.nextConntractId;
+      this.formData.contractNumber = 'MTI' + new Date().toISOString().split('T')[0].replace(/-/g, '') + this.formData.userId + this.nextConntractId;
 
       // 计算SMT单价=点数*单点单价
       row.smtPrice = (row.smtPoints * row.smtUnitPrice).toFixed(3);
@@ -1348,7 +1349,7 @@ export default {
         nextcontractid().then(res => {
           this.nextConntractId = res.data;
           // 计算合同号
-          this.formData.contractNumber = 'MTYC' + new Date().toISOString().split('T')[0].replace(/-/g, '') +this.formData.userId + this.nextConntractId;
+          this.formData.contractNumber = 'MTI' + new Date().toISOString().split('T')[0].replace(/-/g, '') +this.formData.userId + this.nextConntractId;
 
         });
       });

@@ -3,7 +3,7 @@
     <el-card class="form-card">
       <!-- 公司信息和合同标题 -->
       <div class="company-info">
-        <h1>深圳市铭泰云创科技有限公司</h1>
+        <h1>深圳市铭泰创新技术有限公司</h1>
         <h2>销 售 合 同</h2>
       </div>
 
@@ -51,7 +51,7 @@
             <!--            <el-input v-model="formData.supplyCompany" disabled value="深圳市铭泰云创科技有限公司"></el-input>-->
           </el-form-item>
           <el-form-item label="供方单位名称：">
-            <el-input v-model="formData.supplyCompany" disabled value="深圳市铭泰云创科技有限公司"></el-input>
+            <el-input v-model="formData.supplyCompany" disabled value="深圳市铭泰创新技术有限公司"></el-input>
           </el-form-item>
           <el-form-item label="供方地址：">
             <el-input v-model="formData.supplyAddress" disabled value="深圳市宝安区航城街道钟屋泰兴隆工业城D栋6楼"></el-input>
@@ -496,13 +496,13 @@ export default {
         demandBank: '',
         demandAccount: '',
         demandTax: '',
-        supplyCompany: '深圳市铭泰云创科技有限公司',
+        supplyCompany: '深圳市铭泰创新技术有限公司',
         supplyAddress: '深圳市宝安区航城街道钟屋泰兴隆工业城D栋6楼',
         supplyRepresentative: '',
         supplyPhone: '',
-        supplyBank: '招商银行股份有限公司深圳南海支行',
-        supplyAccount: '755976430810001',
-        supplyTax: '91440300MAE2QKQ221'
+        supplyBank: '中国农业银行股份有限公司深圳弘雅支行',
+        supplyAccount: '41019500040045856',
+        supplyTax: '91440300MACQDGUD45'
       },
       tableData: [
         {
