@@ -41,6 +41,18 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="单据日期" prop="flowTimeRange">
+        <el-date-picker
+          v-model="queryParams.flowTimeRange"
+          type="monthrange"
+          range-separator="至"
+          start-placeholder="开始月份"
+          end-placeholder="结束月份"
+          value-format="yyyy年MM月"
+          style="width: 240px"
+        >
+        </el-date-picker>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -207,7 +219,8 @@ export default {
         materialCode: null,
         productName: null,
         totalNumber: null,
-        shipNumber: null
+        shipNumber: null,
+        flowTimeRange: null
       },
       // 表单参数
       form: {},
@@ -237,7 +250,16 @@ export default {
     /** 查询出货记录列表 */
     getList() {
       this.loading = true;
-      listLog(this.queryParams).then(response => {
+      // 处理日期范围参数
+      const params = { ...this.queryParams };
+      if (params.flowTimeRange && params.flowTimeRange.length === 2) {
+        params.beginFlowTime = params.flowTimeRange[0];
+        params.endFlowTime = params.flowTimeRange[1];
+      }
+      // 删除flowTimeRange字段，避免传递数组给后端
+      delete params.flowTimeRange;
+      
+      listLog(params).then(response => {
         this.logList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -259,6 +281,12 @@ export default {
         shipNumber: null
       };
       this.resetForm("form");
+    },
+    /** 重置查询条件 */
+    resetQuery() {
+      this.queryParams.flowTimeRange = null;
+      this.resetForm("queryForm");
+      this.handleQuery();
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -478,9 +506,16 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/log/export', {
-        ...this.queryParams
-      }, `log_${new Date().getTime()}.xlsx`)
+      // 处理导出时的日期范围参数
+      const exportParams = { ...this.queryParams };
+      if (exportParams.flowTimeRange && exportParams.flowTimeRange.length === 2) {
+        exportParams.beginFlowTime = exportParams.flowTimeRange[0];
+        exportParams.endFlowTime = exportParams.flowTimeRange[1];
+      }
+      // 删除flowTimeRange字段
+      delete exportParams.flowTimeRange;
+      
+      this.download('system/log/export', exportParams, `log_${new Date().getTime()}.xlsx`)
     }
   }
 };

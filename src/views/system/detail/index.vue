@@ -1,58 +1,34 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="名称" prop="name">
+      <el-form-item label="创建时间" prop="gmtCreate">
+        <el-date-picker clearable
+          v-model="queryParams.gmtCreate"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择创建时间">
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="修改时间" prop="gmtModified">
+        <el-date-picker clearable
+          v-model="queryParams.gmtModified"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择修改时间">
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="库存编号" prop="stockCode">
         <el-input
-          v-model="queryParams.name"
-          placeholder="请输入名称"
+          v-model="queryParams.stockCode"
+          placeholder="请输入库存编号"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="物料编码" prop="materialCode">
+      <el-form-item label="数量" prop="quantity">
         <el-input
-          v-model="queryParams.materialCode"
-          placeholder="请输入物料编码"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="物料料号" prop="materialPartNumber">
-        <el-input
-          v-model="queryParams.materialPartNumber"
-          placeholder="请输入物料料号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="规格" prop="specification">
-        <el-input
-          v-model="queryParams.specification"
-          placeholder="请输入规格"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="封装" prop="packages">
-        <el-input
-          v-model="queryParams.packages"
-          placeholder="请输入封装"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="数量" prop="number">
-        <el-input
-          v-model="queryParams.number"
+          v-model="queryParams.quantity"
           placeholder="请输入数量"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="备注" prop="remarks">
-        <el-input
-          v-model="queryParams.remarks"
-          placeholder="请输入备注"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -71,7 +47,7 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-          v-hasPermi="['system:inventory:add']"
+          v-hasPermi="['system:detail:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -82,7 +58,7 @@
           size="mini"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['system:inventory:edit']"
+          v-hasPermi="['system:detail:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -93,7 +69,7 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['system:inventory:remove']"
+          v-hasPermi="['system:detail:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -103,22 +79,30 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-          v-hasPermi="['system:inventory:export']"
+          v-hasPermi="['system:detail:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="inventoryList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="detailList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="id" align="center" prop="id" />
-      <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="物料编码" align="center" prop="materialCode" />
-      <el-table-column label="物料料号" align="center" prop="materialPartNumber" />
-      <el-table-column label="规格" align="center" prop="specification" />
-      <el-table-column label="封装" align="center" prop="packages" />
-      <el-table-column label="数量" align="center" prop="number" />
-      <el-table-column label="备注" align="center" prop="remarks" />
+      <el-table-column label="主键ID" align="center" prop="id" />
+      <el-table-column label="创建时间" align="center" prop="gmtCreate" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.gmtCreate, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="修改时间" align="center" prop="gmtModified" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.gmtModified, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="库存编号" align="center" prop="stockCode" />
+      <el-table-column label="操作类型0入库1出库" align="center" prop="operationType" />
+      <el-table-column label="数量" align="center" prop="quantity" />
+      <el-table-column label="备注" align="center" prop="remark" />
+      <el-table-column label="扩展字段(JSON格式)" align="center" prop="extField" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -126,14 +110,14 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:inventory:edit']"
+            v-hasPermi="['system:detail:edit']"
           >修改</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            v-hasPermi="['system:inventory:remove']"
+            v-hasPermi="['system:detail:remove']"
           >删除</el-button>
         </template>
       </el-table-column>
@@ -147,29 +131,36 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改库存管理对话框 -->
+    <!-- 添加或修改出货记录明细对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入名称" />
+        <el-form-item label="创建时间" prop="gmtCreate">
+          <el-date-picker clearable
+            v-model="form.gmtCreate"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="请选择创建时间">
+          </el-date-picker>
         </el-form-item>
-        <el-form-item label="物料编码" prop="materialCode">
-          <el-input v-model="form.materialCode" placeholder="请输入物料编码" :disabled="form.id != null" />
+        <el-form-item label="修改时间" prop="gmtModified">
+          <el-date-picker clearable
+            v-model="form.gmtModified"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="请选择修改时间">
+          </el-date-picker>
         </el-form-item>
-        <el-form-item label="物料料号" prop="materialPartNumber">
-          <el-input v-model="form.materialPartNumber" placeholder="请输入物料料号" :disabled="form.id != null" />
+        <el-form-item label="库存编号" prop="stockCode">
+          <el-input v-model="form.stockCode" placeholder="请输入库存编号" />
         </el-form-item>
-        <el-form-item label="规格" prop="specification">
-          <el-input v-model="form.specification" placeholder="请输入规格" />
+        <el-form-item label="数量" prop="quantity">
+          <el-input v-model="form.quantity" placeholder="请输入数量" />
         </el-form-item>
-        <el-form-item label="封装" prop="packages">
-          <el-input v-model="form.packages" placeholder="请输入封装" />
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
         </el-form-item>
-        <el-form-item label="数量" prop="number">
-          <el-input-number v-model="form.number" :min="0" :step="1" controls-position="right" placeholder="请输入数量" style="width: 100%;" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remarks">
-          <el-input v-model="form.remarks" placeholder="请输入备注" />
+        <el-form-item label="扩展字段(JSON格式)" prop="extField">
+          <el-input v-model="form.extField" type="textarea" placeholder="请输入内容" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -181,10 +172,10 @@
 </template>
 
 <script>
-import { listInventory, getInventory, delInventory, addInventory, updateInventory } from "@/api/system/inventory";
+import { listDetail, getDetail, delDetail, addDetail, updateDetail } from "@/api/system/detail";
 
 export default {
-  name: "Inventory",
+  name: "Detail",
   data() {
     return {
       // 遮罩层
@@ -199,8 +190,8 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 库存管理表格数据
-      inventoryList: [],
+      // 出货记录明细表格数据
+      detailList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -209,25 +200,26 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        name: null,
-        materialCode: null,
-        materialPartNumber: null,
-        specification: null,
-        packages: null,
-        number: null,
-        remarks: null
+        gmtCreate: null,
+        gmtModified: null,
+        stockCode: null,
+        operationType: null,
+        quantity: null,
+        extField: null
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        materialCode: [
-          { required: true, message: '物料编码不能为空', trigger: 'blur' }
+        stockCode: [
+          { required: true, message: "库存编号不能为空", trigger: "blur" }
         ],
-        number: [
-          { required: true, message: '数量不能为空', trigger: 'blur' },
-          { type: 'number', message: '数量必须为数字值', trigger: 'blur' }
-        ]
+        operationType: [
+          { required: true, message: "操作类型0入库1出库不能为空", trigger: "change" }
+        ],
+        quantity: [
+          { required: true, message: "数量不能为空", trigger: "blur" }
+        ],
       }
     };
   },
@@ -235,11 +227,11 @@ export default {
     this.getList();
   },
   methods: {
-    /** 查询库存管理列表 */
+    /** 查询出货记录明细列表 */
     getList() {
       this.loading = true;
-      listInventory(this.queryParams).then(response => {
-        this.inventoryList = response.rows;
+      listDetail(this.queryParams).then(response => {
+        this.detailList = response.rows;
         this.total = response.total;
         this.loading = false;
       });
@@ -253,13 +245,13 @@ export default {
     reset() {
       this.form = {
         id: null,
-        name: null,
-        materialCode: null,
-        materialPartNumber: null,
-        specification: null,
-        packages: null,
-        number: null,
-        remarks: null
+        gmtCreate: null,
+        gmtModified: null,
+        stockCode: null,
+        operationType: null,
+        quantity: null,
+        remark: null,
+        extField: null
       };
       this.resetForm("form");
     },
@@ -283,39 +275,30 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加库存管理";
+      this.title = "添加出货记录明细";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       const id = row.id || this.ids
-      getInventory(id).then(response => {
+      getDetail(id).then(response => {
         this.form = response.data;
-        // 确保数量字段是数字类型
-        if (this.form.number !== null && this.form.number !== undefined) {
-          this.form.number = Number(this.form.number);
-        }
         this.open = true;
-        this.title = "修改库存管理";
+        this.title = "修改出货记录明细";
       });
     },
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          // 确保数量字段是数字类型
-          if (this.form.number !== null && this.form.number !== undefined) {
-            this.form.number = Number(this.form.number);
-          }
-          
           if (this.form.id != null) {
-            updateInventory(this.form).then(response => {
+            updateDetail(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addInventory(this.form).then(response => {
+            addDetail(this.form).then(response => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -327,8 +310,8 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const ids = row.id || this.ids;
-      this.$modal.confirm('是否确认删除库存管理编号为"' + ids + '"的数据项？').then(function() {
-        return delInventory(ids);
+      this.$modal.confirm('是否确认删除出货记录明细编号为"' + ids + '"的数据项？').then(function() {
+        return delDetail(ids);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
@@ -336,9 +319,9 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/inventory/export', {
+      this.download('system/detail/export', {
         ...this.queryParams
-      }, `inventory_${new Date().getTime()}.xlsx`)
+      }, `detail_${new Date().getTime()}.xlsx`)
     }
   }
 };
