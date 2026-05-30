@@ -42,3 +42,12 @@ export function delInventory(id) {
     method: 'delete'
   })
 }
+
+// 库存调整
+export function adjustInventory(data) {
+  return request({
+    url: '/system/inventory/adjust',
+    method: 'post',
+    data: data
+  })
+}

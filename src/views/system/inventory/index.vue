@@ -131,6 +131,13 @@
           <el-button
             size="mini"
             type="text"
+            icon="el-icon-refresh"
+            @click="handleAdjust(scope.row)"
+            v-hasPermi="['system:inventory:edit']"
+          >库存调整</el-button>
+          <el-button
+            size="mini"
+            type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['system:inventory:remove']"
@@ -166,7 +173,7 @@
           <el-input v-model="form.packages" placeholder="请输入封装" />
         </el-form-item>
         <el-form-item label="数量" prop="number">
-          <el-input-number v-model="form.number" :min="0" :step="1" controls-position="right" placeholder="请输入数量" style="width: 100%;" />
+          <el-input-number v-model="form.number" :min="0" :step="1" controls-position="right" placeholder="请输入数量" style="width: 100%;" :disabled="form.id != null" />
         </el-form-item>
         <el-form-item label="备注" prop="remarks">
           <el-input v-model="form.remarks" placeholder="请输入备注" />
@@ -177,11 +184,45 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
+    <!-- 库存调整对话框 -->
+    <el-dialog title="库存调整" :visible.sync="adjustOpen" width="500px" append-to-body>
+      <el-form ref="adjustForm" :model="adjustForm" :rules="adjustRules" label-width="100px">
+        <el-form-item label="物料编码">
+          <el-input v-model="adjustForm.materialCode" disabled />
+        </el-form-item>
+        <el-form-item label="物料料号">
+          <el-input v-model="adjustForm.materialPartNumber" disabled />
+        </el-form-item>
+        <el-form-item label="当前库存">
+          <el-input v-model="adjustForm.currentNumber" disabled />
+        </el-form-item>
+        <el-form-item label="调整数量" prop="quantity">
+          <el-input-number 
+            v-model="adjustForm.quantity" 
+            placeholder="正数增加，负数减少" 
+            style="width: 100%;" 
+            :min="-999999" 
+            :max="999999" 
+            :step="1" 
+            controls-position="right" 
+          />
+          <div style="color: #909399; font-size: 12px; margin-top: 5px;">正数表示增加库存，负数表示减少库存</div>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="adjustForm.remark" type="textarea" placeholder="请输入备注信息" :rows="3" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitAdjustForm">确 定</el-button>
+        <el-button @click="cancelAdjust">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listInventory, getInventory, delInventory, addInventory, updateInventory } from "@/api/system/inventory";
+import { listInventory, getInventory, delInventory, addInventory, updateInventory, adjustInventory } from "@/api/system/inventory";
 
 export default {
   name: "Inventory",
@@ -205,6 +246,10 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      // 库存调整弹出层
+      adjustOpen: false,
+      // 库存调整表单
+      adjustForm: {},
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -227,6 +272,23 @@ export default {
         number: [
           { required: true, message: '数量不能为空', trigger: 'blur' },
           { type: 'number', message: '数量必须为数字值', trigger: 'blur' }
+        ]
+      },
+      // 库存调整表单校验
+      adjustRules: {
+        quantity: [
+          { required: true, message: '调整数量不能为空', trigger: 'blur' },
+          { type: 'number', message: '调整数量必须为数字值', trigger: 'blur' },
+          { 
+            validator: (rule, value, callback) => {
+              if (value === 0) {
+                callback(new Error('调整数量不能为0'));
+              } else {
+                callback();
+              }
+            }, 
+            trigger: 'blur' 
+          }
         ]
       }
     };
@@ -297,6 +359,59 @@ export default {
         }
         this.open = true;
         this.title = "修改库存管理";
+      });
+    },
+    /** 库存调整按钮操作 */
+    handleAdjust(row) {
+      this.resetAdjust();
+      this.adjustForm = {
+        inventoryId: row.id,
+        materialCode: row.materialCode,
+        materialPartNumber: row.materialPartNumber,
+        currentNumber: row.number,
+        quantity: null,
+        remark: null
+      };
+      this.adjustOpen = true;
+    },
+    // 库存调整表单重置
+    resetAdjust() {
+      this.adjustForm = {
+        inventoryId: null,
+        materialCode: null,
+        materialPartNumber: null,
+        currentNumber: null,
+        quantity: null,
+        remark: null
+      };
+      this.resetForm("adjustForm");
+    },
+    // 取消库存调整
+    cancelAdjust() {
+      this.adjustOpen = false;
+      this.resetAdjust();
+    },
+    /** 提交库存调整表单 */
+    submitAdjustForm() {
+      this.$refs["adjustForm"].validate(valid => {
+        if (valid) {
+          // 确保数量字段是数字类型
+          if (this.adjustForm.quantity !== null && this.adjustForm.quantity !== undefined) {
+            this.adjustForm.quantity = Number(this.adjustForm.quantity);
+          }
+          
+          const data = {
+            inventoryId: this.adjustForm.inventoryId,
+            quantity: this.adjustForm.quantity,
+            remark: this.adjustForm.remark
+          };
+          
+          adjustInventory(data).then(response => {
+            this.$modal.msgSuccess("调整成功");
+            this.adjustOpen = false;
+            this.getList();
+          });
+        }
       });
     },
     /** 提交按钮 */
