@@ -51,3 +51,27 @@ export function adjustInventory(data) {
     data: data
   })
 }
+
+// 下载批量操作模板
+export function downloadBatchTemplate() {
+  return request({
+    url: '/system/inventory/batchTemplate',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
+// 批量导入库存调整
+export function batchImportInventory(data) {
+  return request({
+    url: '/system/inventory/batchImport',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    responseType: 'blob',
+    // 防止数据重复提交检查干扰 FormData
+    repeatSubmit: false
+  })
+}
