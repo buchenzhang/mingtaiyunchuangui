@@ -41,10 +41,18 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="数量" prop="number">
+      <el-form-item label="盘数" prop="panShu">
         <el-input
-          v-model="queryParams.number"
-          placeholder="请输入数量"
+          v-model="queryParams.panShu"
+          placeholder="请输入盘数"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="每盘数" prop="meiPanShu">
+        <el-input
+          v-model="queryParams.meiPanShu"
+          placeholder="请输入每盘数"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -131,13 +139,20 @@
 
     <el-table v-loading="loading" :data="inventoryList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="id" align="center" prop="id" />
+      <el-table-column label="仓类型" align="center" prop="warehouseType">
+        <template slot-scope="scope">
+          <el-tag v-if="scope.row.warehouseType === '1'" type="primary">电子仓</el-tag>
+          <el-tag v-else-if="scope.row.warehouseType === '2'" type="success">机构仓</el-tag>
+          <el-tag v-else-if="scope.row.warehouseType === '3'" type="warning">外协仓</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="物料编码" align="center" prop="materialCode" />
       <el-table-column label="物料料号" align="center" prop="materialPartNumber" />
       <el-table-column label="规格" align="center" prop="specification" />
       <el-table-column label="封装" align="center" prop="packages" />
-      <el-table-column label="数量" align="center" prop="number" />
+      <el-table-column label="盘数" align="center" prop="panShu" />
+      <el-table-column label="每盘数" align="center" prop="meiPanShu" />
       <el-table-column label="备注" align="center" prop="remarks" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -176,9 +191,16 @@
 
     <!-- 添加或修改库存管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入名称" />
+        </el-form-item>
+        <el-form-item label="仓类型" prop="warehouseType">
+          <el-select v-model="form.warehouseType" placeholder="请选择仓类型" style="width: 100%;">
+            <el-option label="电子仓" value="1" />
+            <el-option label="机构仓" value="2" />
+            <el-option label="外协仓" value="3" />
+          </el-select>
         </el-form-item>
         <el-form-item label="物料编码" prop="materialCode">
           <el-input v-model="form.materialCode" placeholder="请输入物料编码" :disabled="form.id != null" />
@@ -186,17 +208,20 @@
         <el-form-item label="物料料号" prop="materialPartNumber">
           <el-input v-model="form.materialPartNumber" placeholder="请输入物料料号" :disabled="form.id != null" />
         </el-form-item>
+        <el-form-item label="每盘数" prop="meiPanShu">
+          <el-input-number v-model="form.meiPanShu" :min="1" :step="1" controls-position="right" placeholder="请输入每盘数" style="width: 100%;" />
+        </el-form-item>
         <el-form-item label="规格" prop="specification">
           <el-input v-model="form.specification" placeholder="请输入规格" />
         </el-form-item>
         <el-form-item label="封装" prop="packages">
           <el-input v-model="form.packages" placeholder="请输入封装" />
         </el-form-item>
-        <el-form-item label="数量" prop="number">
-          <el-input-number v-model="form.number" :min="0" :step="1" controls-position="right" placeholder="请输入数量" style="width: 100%;" :disabled="form.id != null" />
+        <el-form-item label="盘数" prop="panShu">
+          <el-input-number v-model="form.panShu" :min="0" :step="1" controls-position="right" placeholder="请输入盘数" style="width: 100%;" :disabled="form.id != null" />
         </el-form-item>
         <el-form-item label="备注" prop="remarks">
-          <el-input v-model="form.remarks" placeholder="请输入备注" />
+          <el-input v-model="form.remarks" type="textarea" placeholder="请输入备注" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -214,8 +239,8 @@
         <el-form-item label="物料料号">
           <el-input v-model="adjustForm.materialPartNumber" disabled />
         </el-form-item>
-        <el-form-item label="当前库存">
-          <el-input v-model="adjustForm.currentNumber" disabled />
+        <el-form-item label="当前盘数">
+          <el-input v-model="adjustForm.currentPanShu" disabled />
         </el-form-item>
         <el-form-item label="调整数量" prop="quantity">
           <el-input-number
@@ -261,9 +286,12 @@
         <el-form-item label="操作说明">
           <div style="color: #909399; font-size: 12px; line-height: 1.5;">
             <p>1. 请先下载批量操作模板，按照模板格式填写数据</p>
-            <p>2. 模板包含三列：id（库存ID）、数量（调整数量）、备注（可选）</p>
-            <p>3. 数量为正数表示增加库存，负数表示减少库存</p>
-            <p>4. 导入完成后会返回带结果的Excel文件</p>
+            <p>2. 模板包含六列：仓类型、物料编码、物料料号、每盘数、盘数、备注</p>
+            <p>3. 仓类型：电子仓，机构仓，外协仓（必填）</p>
+            <p>4. 盘数为正数表示入库，负数表示出库，不能为0</p>
+            <p>5. 入库操作：如果唯一键存在则累加盘数，不存在则创建新记录</p>
+            <p>6. 出库操作：必须确保库存充足，否则导入失败</p>
+            <p>7. 导入完成后会返回带结果的Excel文件</p>
           </div>
         </el-form-item>
       </el-form>
@@ -321,23 +349,27 @@ export default {
         pageNum: 1,
         pageSize: 10,
         name: null,
+        warehouseType: null,
         materialCode: null,
         materialPartNumber: null,
         specification: null,
         packages: null,
-        number: null,
+        panShu: null,
+        meiPanShu: null,
         remarks: null
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
+        warehouseType: [
+          { required: true, message: '请选择仓类型', trigger: 'change' }
+        ],
         materialCode: [
           { required: true, message: '物料编码不能为空', trigger: 'blur' }
         ],
-        number: [
-          { required: true, message: '数量不能为空', trigger: 'blur' },
-          { type: 'number', message: '数量必须为数字值', trigger: 'blur' }
+        meiPanShu: [
+          { required: true, message: '每盘数不能为空', trigger: 'blur' }
         ]
       },
       // 库存调整表单校验
@@ -382,11 +414,13 @@ export default {
       this.form = {
         id: null,
         name: null,
+        warehouseType: null,
         materialCode: null,
         materialPartNumber: null,
         specification: null,
         packages: null,
-        number: null,
+        panShu: null,
+        meiPanShu: null,
         remarks: null
       };
       this.resetForm("form");
@@ -419,9 +453,13 @@ export default {
       const id = row.id || this.ids
       getInventory(id).then(response => {
         this.form = response.data;
-        // 确保数量字段是数字类型
-        if (this.form.number !== null && this.form.number !== undefined) {
-          this.form.number = Number(this.form.number);
+        // 确保盘数字段是数字类型
+        if (this.form.panShu !== null && this.form.panShu !== undefined) {
+          this.form.panShu = Number(this.form.panShu);
+        }
+        // 确保每盘数字段是数字类型
+        if (this.form.meiPanShu !== null && this.form.meiPanShu !== undefined) {
+          this.form.meiPanShu = Number(this.form.meiPanShu);
         }
         this.open = true;
         this.title = "修改库存管理";
@@ -434,7 +472,7 @@ export default {
         inventoryId: row.id,
         materialCode: row.materialCode,
         materialPartNumber: row.materialPartNumber,
-        currentNumber: row.number,
+        currentPanShu: row.panShu,
         quantity: null,
         remark: null
       };
@@ -446,7 +484,7 @@ export default {
         inventoryId: null,
         materialCode: null,
         materialPartNumber: null,
-        currentNumber: null,
+        currentPanShu: null,
         quantity: null,
         remark: null
       };
@@ -484,9 +522,13 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          // 确保数量字段是数字类型
-          if (this.form.number !== null && this.form.number !== undefined) {
-            this.form.number = Number(this.form.number);
+          // 确保盘数字段是数字类型
+          if (this.form.panShu !== null && this.form.panShu !== undefined) {
+            this.form.panShu = Number(this.form.panShu);
+          }
+          // 确保每盘数字段是数字类型
+          if (this.form.meiPanShu !== null && this.form.meiPanShu !== undefined) {
+            this.form.meiPanShu = Number(this.form.meiPanShu);
           }
 
           if (this.form.id != null) {
