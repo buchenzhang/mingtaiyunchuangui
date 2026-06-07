@@ -72,30 +72,30 @@
           size="mini"
           @click="handleAdd"
           v-hasPermi="['system:inventory:add']"
-        >新增</el-button>
+        >入库</el-button>
       </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:inventory:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['system:inventory:remove']"
-        >删除</el-button>
-      </el-col>
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="success"-->
+<!--          plain-->
+<!--          icon="el-icon-edit"-->
+<!--          size="mini"-->
+<!--          :disabled="single"-->
+<!--          @click="handleUpdate"-->
+<!--          v-hasPermi="['system:inventory:edit']"-->
+<!--        >修改</el-button>-->
+<!--      </el-col>-->
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="danger"-->
+<!--          plain-->
+<!--          icon="el-icon-delete"-->
+<!--          size="mini"-->
+<!--          :disabled="multiple"-->
+<!--          @click="handleDelete"-->
+<!--          v-hasPermi="['system:inventory:remove']"-->
+<!--        >删除</el-button>-->
+<!--      </el-col>-->
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -155,17 +155,17 @@
             @click="handleAdjust(scope.row)"
             v-hasPermi="['system:inventory:edit']"
           >库存调整</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-            v-hasPermi="['system:inventory:remove']"
-          >删除</el-button>
+<!--          <el-button-->
+<!--            size="mini"-->
+<!--            type="text"-->
+<!--            icon="el-icon-delete"-->
+<!--            @click="handleDelete(scope.row)"-->
+<!--            v-hasPermi="['system:inventory:remove']"-->
+<!--          >删除</el-button>-->
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -218,14 +218,14 @@
           <el-input v-model="adjustForm.currentNumber" disabled />
         </el-form-item>
         <el-form-item label="调整数量" prop="quantity">
-          <el-input-number 
-            v-model="adjustForm.quantity" 
-            placeholder="正数增加，负数减少" 
-            style="width: 100%;" 
-            :min="-999999" 
-            :max="999999" 
-            :step="1" 
-            controls-position="right" 
+          <el-input-number
+            v-model="adjustForm.quantity"
+            placeholder="正数增加，负数减少"
+            style="width: 100%;"
+            :min="-999999"
+            :max="999999"
+            :step="1"
+            controls-position="right"
           />
           <div style="color: #909399; font-size: 12px; margin-top: 5px;">正数表示增加库存，负数表示减少库存</div>
         </el-form-item>
@@ -345,15 +345,15 @@ export default {
         quantity: [
           { required: true, message: '调整数量不能为空', trigger: 'blur' },
           { type: 'number', message: '调整数量必须为数字值', trigger: 'blur' },
-          { 
+          {
             validator: (rule, value, callback) => {
               if (value === 0) {
                 callback(new Error('调整数量不能为0'));
               } else {
                 callback();
               }
-            }, 
-            trigger: 'blur' 
+            },
+            trigger: 'blur'
           }
         ]
       }
@@ -465,13 +465,13 @@ export default {
           if (this.adjustForm.quantity !== null && this.adjustForm.quantity !== undefined) {
             this.adjustForm.quantity = Number(this.adjustForm.quantity);
           }
-          
+
           const data = {
             inventoryId: this.adjustForm.inventoryId,
             quantity: this.adjustForm.quantity,
             remark: this.adjustForm.remark
           };
-          
+
           adjustInventory(data).then(response => {
             this.$modal.msgSuccess("调整成功");
             this.adjustOpen = false;
@@ -488,7 +488,7 @@ export default {
           if (this.form.number !== null && this.form.number !== undefined) {
             this.form.number = Number(this.form.number);
           }
-          
+
           if (this.form.id != null) {
             updateInventory(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
@@ -526,8 +526,8 @@ export default {
       this.batchTemplateLoading = true;
       downloadBatchTemplate().then(response => {
         // 重新创建 Blob 并指定正确的 MIME 类型
-        const blob = new Blob([response], { 
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        const blob = new Blob([response], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         });
         saveAs(blob, '批量操作模板.xlsx');
         this.$modal.msgSuccess("模板下载成功");
@@ -558,7 +558,7 @@ export default {
     submitBatchAdjust() {
       console.log('=== 开始批量调整 ===');
       console.log('选择的文件:', this.batchForm.file);
-      
+
       if (!this.batchForm.file) {
         console.log('未选择文件');
         this.$modal.msgError("请先选择要上传的文件");
@@ -583,22 +583,22 @@ export default {
           console.log('=== 收到响应 ===');
           console.log('响应类型:', typeof response);
           console.log('响应对象:', response);
-          
+
           if (response instanceof Blob) {
             console.log('响应是 Blob 类型');
             console.log('Blob type:', response.type);
             console.log('Blob size:', response.size);
           }
-          
+
           // 验证是否为有效的blob
           const isBlob = blobValidate(response);
           console.log('是否为有效Blob:', isBlob);
-          
+
           if (isBlob) {
             console.log('开始下载文件...');
             // 重要：重新创建 Blob 并指定正确的 MIME 类型，与下载模板保持一致
-            const blob = new Blob([response], { 
-              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+            const blob = new Blob([response], {
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             });
             saveAs(blob, '批量导入结果.xlsx');
             console.log('文件下载完成');

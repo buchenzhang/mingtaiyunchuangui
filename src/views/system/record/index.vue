@@ -23,7 +23,19 @@
       </el-form-item>
     </el-form>
 
-
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="el-icon-download"
+          size="mini"
+          @click="handleExport"
+          v-hasPermi="['system:record:export']"
+        >导出</el-button>
+      </el-col>
+      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+    </el-row>
 
     <el-table v-loading="loading" :data="recordList">
       <el-table-column label="主键ID" align="center" prop="id" />
@@ -53,7 +65,7 @@
 </template>
 
 <script>
-import { listRecord, getRecord, delRecord, addRecord, updateRecord } from "@/api/system/record";
+import { listRecord, getRecord, delRecord, addRecord, updateRecord, exportRecord } from "@/api/system/record";
 
 export default {
   name: "Record",
@@ -98,6 +110,12 @@ export default {
     resetQuery() {
       this.resetForm("queryForm");
       this.handleQuery();
+    },
+    /** 导出按钮操作 */
+    handleExport() {
+      this.download('system/record/export', {
+        ...this.queryParams
+      }, `record_${new Date().getTime()}.xlsx`)
     }
   }
 };

@@ -42,3 +42,12 @@ export function delRecord(id) {
     method: 'delete'
   })
 }
+
+// 导出库存操作记录
+export function exportRecord(query) {
+  return request({
+    url: '/system/record/export',
+    method: 'get',
+    params: query
+  })
+}
