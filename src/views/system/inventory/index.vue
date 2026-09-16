@@ -134,6 +134,16 @@
           v-hasPermi="['system:inventory:edit']"
         >批量调整库存</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="success"
+          plain
+          icon="el-icon-upload2"
+          size="mini"
+          @click="handleBatchAdd"
+          v-hasPermi="['system:inventory:add']"
+        >批量新增</el-button>
+      </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
@@ -300,11 +310,49 @@
         <el-button @click="cancelBatchAdjust">取 消</el-button>
       </div>
     </el-dialog>
+
+    <!-- 批量新增库存对话框 -->
+    <el-dialog title="批量新增库存" :visible.sync="batchAddOpen" width="500px" append-to-body>
+      <el-form ref="batchAddForm" :model="batchAddForm" label-width="100px">
+        <el-form-item label="选择文件">
+          <el-upload
+            class="upload-demo"
+            drag
+            action="#"
+            :auto-upload="false"
+            :on-change="handleBatchAddFileChange"
+            :file-list="batchAddFileList"
+            accept=".xlsx,.xls"
+            :limit="1"
+          >
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+            <div class="el-upload__tip" slot="tip">只能上传xlsx/xls文件，且不超过10MB</div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="操作说明">
+          <div style="color: #909399; font-size: 12px; line-height: 1.5;">
+            <p>1. 请先下载批量新增模板，按照模板格式填写数据</p>
+            <p>2. 模板包含九列：名称、仓类型、物料编码、物料料号、规格、封装、每盘数、盘数、备注</p>
+            <p>3. 必填字段：仓类型、物料编码、每盘数</p>
+            <p>4. 仓类型：1-电子仓，2-机构仓，3-外协仓</p>
+            <p>5. 系统会根据“仓类型+物料编码+物料料号+每盘数”作为唯一键校验</p>
+            <p>6. 如果唯一键已存在，则该条记录导入失败</p>
+            <p>7. 导入完成后会返回带结果的Excel文件，请查看导入结果</p>
+          </div>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="downloadBatchAddTemplate" :loading="batchAddTemplateLoading">下载模板</el-button>
+        <el-button type="success" @click="submitBatchAdd" :loading="batchAddLoading">开始导入</el-button>
+        <el-button @click="cancelBatchAdd">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listInventory, getInventory, delInventory, addInventory, updateInventory, adjustInventory, downloadBatchTemplate, batchImportInventory } from "@/api/system/inventory";
+import { listInventory, getInventory, delInventory, addInventory, updateInventory, adjustInventory, downloadBatchTemplate, batchImportInventory, downloadImportTemplate, importInventory } from "@/api/system/inventory";
 import { saveAs } from 'file-saver';
 import { blobValidate } from "@/utils/ruoyi";
 
@@ -344,6 +392,16 @@ export default {
       fileList: [],
       // 批量调整加载状态
       batchAdjustLoading: false,
+      // 批量新增弹出层
+      batchAddOpen: false,
+      // 批量新增表单
+      batchAddForm: {},
+      // 批量新增文件列表
+      batchAddFileList: [],
+      // 批量新增模板下载加载状态
+      batchAddTemplateLoading: false,
+      // 批量新增加载状态
+      batchAddLoading: false,
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -673,6 +731,118 @@ export default {
         .finally(() => {
           console.log('=== 请求结束 ===');
           this.batchAdjustLoading = false;
+        });
+    },
+    /** 批量新增库存按钮操作 */
+    handleBatchAdd() {
+      this.batchAddOpen = true;
+      this.batchAddFileList = [];
+      this.batchAddForm = {};
+    },
+    // 批量新增文件选择变化
+    handleBatchAddFileChange(file, fileList) {
+      this.batchAddFileList = fileList;
+      this.batchAddForm.file = file.raw;
+    },
+    // 取消批量新增
+    cancelBatchAdd() {
+      this.batchAddOpen = false;
+      this.batchAddFileList = [];
+      this.batchAddForm = {};
+    },
+    /** 下载批量新增模板 */
+    downloadBatchAddTemplate() {
+      this.batchAddTemplateLoading = true;
+      downloadImportTemplate().then(response => {
+        // 重新创建 Blob 并指定正确的 MIME 类型
+        const blob = new Blob([response], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        saveAs(blob, '库存导入模板.xlsx');
+        this.$modal.msgSuccess("模板下载成功");
+      }).catch(error => {
+        this.$modal.msgError("模板下载失败：" + error.message);
+      }).finally(() => {
+        this.batchAddTemplateLoading = false;
+      });
+    },
+    /** 提交批量新增表单 */
+    submitBatchAdd() {
+      console.log('=== 开始批量新增 ===');
+      console.log('选择的文件:', this.batchAddForm.file);
+
+      if (!this.batchAddForm.file) {
+        console.log('未选择文件');
+        this.$modal.msgError("请先选择要上传的文件");
+        return;
+      }
+
+      // 检查文件大小（10MB）
+      if (this.batchAddForm.file.size > 10 * 1024 * 1024) {
+        console.log('文件过大:', this.batchAddForm.file.size);
+        this.$modal.msgError("文件大小不能超过10MB");
+        return;
+      }
+
+      console.log('准备发送请求...');
+      this.batchAddLoading = true;
+      const formData = new FormData();
+      formData.append('file', this.batchAddForm.file);
+      console.log('FormData 已创建');
+
+      importInventory(formData)
+        .then(async (response) => {
+          console.log('=== 收到响应 ===');
+          console.log('响应类型:', typeof response);
+          console.log('响应对象:', response);
+
+          if (response instanceof Blob) {
+            console.log('响应是 Blob 类型');
+            console.log('Blob type:', response.type);
+            console.log('Blob size:', response.size);
+          }
+
+          // 验证是否为有效的blob
+          const isBlob = blobValidate(response);
+          console.log('是否为有效Blob:', isBlob);
+
+          if (isBlob) {
+            console.log('开始下载文件...');
+            // 重要：重新创建 Blob 并指定正确的 MIME 类型
+            const blob = new Blob([response], {
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            saveAs(blob, '库存导入结果.xlsx');
+            console.log('文件下载完成');
+            this.$modal.msgSuccess("批量新增完成，结果文件已下载");
+            this.batchAddOpen = false;
+            this.batchAddFileList = [];
+            this.batchAddForm = {};
+            this.getList(); // 刷新列表
+          } else {
+            console.log('响应不是有效的 Blob，尝试解析为 JSON');
+            // 如果返回的是JSON错误信息
+            try {
+              const resText = await response.text();
+              console.log('错误响应内容:', resText);
+              const rspObj = JSON.parse(resText);
+              this.$modal.msgError(rspObj.msg || "批量新增失败");
+            } catch (e) {
+              console.error('解析错误响应失败:', e);
+              this.$modal.msgError("批量新增失败，请稍后重试");
+            }
+          }
+        })
+        .catch(error => {
+          console.error('=== 请求失败 ===');
+          console.error('错误对象:', error);
+          console.error('错误消息:', error.message);
+          console.error('错误详情:', JSON.stringify(error, null, 2));
+          this.$modal.msgError("批量新增失败：" + (error.message || '未知错误'));
+        })
+        .finally(() => {
+          console.log('=== 请求结束 ===');
+          this.batchAddLoading = false;
         });
     }
   }

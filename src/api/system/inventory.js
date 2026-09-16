@@ -75,3 +75,27 @@ export function batchImportInventory(data) {
     repeatSubmit: false
   })
 }
+
+// 下载批量新增模板
+export function downloadImportTemplate() {
+  return request({
+    url: '/system/inventory/importTemplate',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
+// 批量导入库存（仅新增）
+export function importInventory(data) {
+  return request({
+    url: '/system/inventory/import',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    responseType: 'blob',
+    // 防止数据重复提交检查干扰 FormData
+    repeatSubmit: false
+  })
+}

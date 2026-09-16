@@ -37,8 +37,8 @@ module.exports = {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
         // todo mz 发布修改
-        // target: `http://119.91.61.22:8088`,
-        target: `http://127.0.0.1:8088`,
+        target: `http://119.91.61.22:8088`,
+        // target: `http://127.0.0.1:8088`,
         angeOrigin: true,
         pathRewrite: {
           ['^' + process.env.VUE_APP_BASE_API]: ''
